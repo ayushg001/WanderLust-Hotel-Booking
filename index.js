@@ -6,6 +6,9 @@ const Listing =   require("./models/listing.js");
 const Path = require("path")
 const methodoverride = require("method-override")
 const ejsMate = require("ejs-Mate");
+const { nextTick } = require("process");
+const wrapAsync = require("./utils/wrapAsync.js");
+
 
 main()
 .then(  (res) => {
@@ -42,11 +45,13 @@ app.get( "/listings/new" , (req,res) =>{
     res.render("listings/new.ejs")
 } )
 
-app.post( "/listings" , async (req,res) =>{
-   const newlisting = new Listing(req.body.listing);
-   await newlisting.save();
-    res.redirect("/listings")
-});
+app.post( "/listings" , wrapAsync(  async (req,res,next) =>{
+   
+        const newlisting = new Listing(req.body.listing);
+        await newlisting.save();
+         res.redirect("/listings")
+})
+);
 
 //4. edit route
 app.get( "/listings/:id/edit" , async (req,res) =>{
@@ -55,11 +60,17 @@ app.get( "/listings/:id/edit" , async (req,res) =>{
     res.render("listings/edit.ejs" , {listing});
 });
 
+//update route
 app.put ("/listings/:id" , async (req,res) => {
     let { id } = req.params;  
-    const updatedListing  =  await Listing.findByIdAndUpdate(id ,{...req.body.listing} );
+    const { title, description, image, price, country, location } = req.body;
+    const updatedListing =  await Listing.findByIdAndUpdate(id, { title, description, image, price, country, location });
+    // const updatedListing  =  await Listing.findByIdAndUpdate(id ,{...req.body.listing} );
+    // const updatedListing  =  await Listing.findByIdAndUpdate(id ,{...req.body.listing} );
 //     const updatedListing  =  await Listing.findByIdAndUpdate(id ,req.body.listing );
 //    this  also works fine
+console.log(req.body);
+console.log(updatedListing)
     res.redirect(`/listings/${id}`)
 });
 
@@ -92,6 +103,10 @@ let { id } = req.params;
 //     console.log("sample was saved");
 //     res.send("testing succesfull")
 // })
+
+app.use((err,req,res,next) => {
+    res.send("something went wrong")
+})
 
 app.listen( 8080 , () => {
     console.log("server is listening");
