@@ -9,6 +9,7 @@ const ejsMate = require("ejs-Mate");
 const { nextTick } = require("process");
 const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/ExpressError.js")
+const {listingSchema} = require("./schema.js")
 
 
 main()
@@ -34,6 +35,18 @@ app.get("/" , (req,res) =>{
     res.send("hi");
 });
 
+const validateListing = (req,res,next) => {
+    let {error} =  listingSchema.validate(req.body);
+    if(error){
+        let errMsg = error.details.map( (el) => 
+        el.message).join(",");
+      throw new ExpressError(400 , errMsg);
+    } else{
+        next();
+    }
+}
+
+
 //1. index route 
 app.get( "/listings" , wrapAsync( async (req,res) => {
    let allListings =  await Listing.find({});
@@ -48,14 +61,11 @@ app.get( "/listings/new" , wrapAsync(  (req,res) =>{
 } )
 );
 
-app.post( "/listings" , wrapAsync(  async (req,res,next) =>{
-   if(!req.body.listing){
-        next(new ExpressError(400 , "send valid data for listing"))
-   }
+app.post( "/listings" , validateListing , wrapAsync(  async (req,res,next) =>{
         const newlisting = new Listing(req.body.listing);
         await newlisting.save();
          res.redirect("/listings")
-})
+})      
 );
 
 //4. edit route
@@ -67,10 +77,7 @@ app.get( "/listings/:id/edit" , wrapAsync(  async (req,res) =>{
 );
 
 //update route
-app.put ("/listings/:id" , wrapAsync(  async (req,res) => {
-    if(!req.body.listing){
-        next(new ExpressError(400 , "send valid data for listing"))
-   }
+app.put ("/listings/:id"   , validateListing  , wrapAsync(  async (req,res) => {
     let { id } = req.params;  
     const { title, description, image, price, country, location } = req.body;
     const updatedListing =  await Listing.findByIdAndUpdate(id, { title, description, image, price, country, location });
