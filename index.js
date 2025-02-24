@@ -8,6 +8,8 @@ const ejsMate = require("ejs-Mate");
 const ExpressError = require("./utils/ExpressError.js")       
 const listings = require("./routes/listing.js");
 const reviews = require("./routes/review.js");
+const  session = require("express-session")
+const flash = require("connect-flash")
 
 main()
 .then(  (res) => {
@@ -28,11 +30,32 @@ app.use(methodoverride("_method"));
 app.engine("ejs" , ejsMate ); 
 app.use(express.static(Path.join(__dirname, "/public")));
 
+const sessionOptions = {
+    secret : "mysupersecretcode",
+    resave : false,
+    saveUninitialized : true,
+    cookie : {
+        expires : Date.now() + 7 * 24 *   60   *  60  * 1000,
+                        //7 days , hrs , mins , sec , millisec  
+        maxAge :   7 * 24 *   60   *  60  * 1000,
+        httpsOnly : true,                           // to prevent from cross-scripting attacks          
+    }
+};
+
 app.get("/" , (req,res) =>{
     res.send("hi");
 });
 
 
+app.use(session(sessionOptions));
+app.use(flash())                      //use flash before the routes
+
+app.use((req , res , next) => {
+    res.locals.success = req.flash("success");
+    res.locals.error = req.flash("error");
+    // console.log(res.locals.success)
+    next();    //use next if not wanted to stuck in this middleware
+})
 
 
 
