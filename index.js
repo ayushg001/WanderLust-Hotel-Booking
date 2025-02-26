@@ -67,6 +67,7 @@ passport.deserializeUser(User.deserializeUser());
 app.use((req , res , next) => {
     res.locals.success = req.flash("success");
     res.locals.error = req.flash("error");
+    res.locals.currUser = req.user;
     // console.log(res.locals.success)
     next();    //use next if not wanted to stuck in this middleware
 })
