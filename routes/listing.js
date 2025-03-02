@@ -8,11 +8,11 @@ const {  isLoggedIn  , isOwner , validateListing } = require("../middleware.js")
 
 
 //1. index route 
-router.get( "/" , wrapAsync( async (req,res) => {
+router.get( "/" , wrapAsync(async (req,res) => {
     let allListings =  await Listing.find({});
      res.render( "listings/index.ejs" , {allListings})
      
- }) 
+ } ) 
  );
  
  //3. create(new)  route
@@ -24,7 +24,8 @@ router.get( "/" , wrapAsync( async (req,res) => {
  //2. show route
  router.get( "/:id" , wrapAsync( async (req,res) => {
     let { id } = req.params;
-       const listing = await Listing.findById(id).populate("reviews").populate("owner");
+       const listing = await Listing.findById(id).populate({path :  "reviews" , populate : { path : "author"}}).populate("owner");
+                //with each listing , reviews should come , with reviews their author should also come (nested populate)
        if(!listing){
         req.flash("error" , "Listing not found!")
         res.redirect("/listings")
