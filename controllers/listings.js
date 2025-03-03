@@ -27,7 +27,7 @@ module.exports.showListing  = async (req,res) => {
 
 module.exports.createListing =   async (req,res,next) =>{
      let response = await  geocodingClient.forwardGeocode({
-        query: 'New Delhi, India',
+        query: req.body.listing.location,
         limit: 1
       })
         .send();
@@ -64,6 +64,11 @@ module.exports.renderEditForm =  async (req,res) =>{
 };
 
 module.exports.updateListing =  async (req,res) => {
+    let response = await  geocodingClient.forwardGeocode({
+        query: req.body.listing.location,
+        limit: 1
+      })
+        .send();
     let { id } = req.params;  
     
 //if don't return , the operations below will also run
@@ -80,6 +85,9 @@ if( typeof req.file !== "undefined"){   //if we don't add any new image file
     let url  = req.file.path;
     let filename = req.file.filename;
     updatedListing.image = { url , filename};
+
+    updatedListing.geometry = response.body.features[0].geometry;
+    
     await updatedListing.save();
 }
 console.log(req.file)

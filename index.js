@@ -52,9 +52,9 @@ const sessionOptions = {
     }
 };
 
-app.get("/" , (req,res) =>{
-    res.send("hi");
-});
+// app.get("/" , (req,res) =>{              // no use
+//     res.send("hi");
+// });
 
 
 app.use(session(sessionOptions));
