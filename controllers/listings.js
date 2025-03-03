@@ -41,7 +41,11 @@ module.exports.renderEditForm =  async (req,res) =>{
         req.flash("error" , "Listing not found!")
         res.redirect("/listings")
        }
-    res.render("listings/edit.ejs" , {listing});
+
+    let originalImageUrl =   listing.image.url;      // image url                             
+    originalImageUrl = originalImageUrl.replace("/upload" , "/upload/w_250");  // it has blur image url
+
+    res.render("listings/edit.ejs" , {listing, originalImageUrl});
 };
 
 module.exports.updateListing =  async (req,res) => {
@@ -54,8 +58,19 @@ module.exports.updateListing =  async (req,res) => {
     const updatedListing  =  await Listing.findByIdAndUpdate(id ,{ ...req.body.listing} );
 //     const updatedListing  =  await Listing.findByIdAndUpdate(id ,req.body.listing );
 //    this  also works fine
-console.log(req.body);
-console.log(updatedListing)
+
+
+
+if( typeof req.file !== "undefined"){   //if we don't add any new image file
+    let url  = req.file.path;
+    let filename = req.file.filename;
+    updatedListing.image = { url , filename};
+    await updatedListing.save();
+}
+console.log(req.file)
+
+// console.log(req.body);
+// console.log(updatedListing)
 req.flash("success" , "Listing Updated!")
     res.redirect(`/listings/${id}`)
 };
